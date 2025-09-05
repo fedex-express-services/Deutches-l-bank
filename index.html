@@ -204,10 +204,10 @@
         </button>
 
         <!-- Sidebar -->
-        <div id="sidebar" class="fixed left-0 top-0 h-full w-80 gradient-bg text-white shadow-2xl transform sidebar-closed lg:sidebar-open transition-transform duration-300 z-40">
+        <div id="sidebar" class="fixed left-0 top-0 h-full w-80 gradient-bg text-white shadow-2xl transform sidebar-closed transition-transform duration-300 z-40">
             <div class="p-6">
                 <!-- Close Button -->
-                <div class="flex justify-end mb-4 lg:hidden">
+                <div class="flex justify-end mb-4">
                     <button id="sidebarCloseBtn" class="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-2 transition-all duration-300">
                         <i class="fas fa-times text-xl"></i>
                     </button>
@@ -269,7 +269,7 @@
         </div>
 
         <!-- Main Content -->
-        <div class="lg:ml-80 min-h-screen">
+        <div id="mainContent" class="lg:ml-0 min-h-screen transition-all duration-300">
             <!-- Header -->
             <header class="bg-white dark:bg-gray-800 shadow-lg p-6">
                 <div class="flex justify-between items-center">
@@ -390,7 +390,7 @@
     </div>
 
     <!-- Overlay for mobile sidebar -->
-    <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"></div>
+    <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-30"></div>
 
     <script>
         // Multi-language support
@@ -659,70 +659,44 @@
         const sidebarOverlay = document.getElementById('sidebarOverlay');
         const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
         const desktopToggleBtn = document.getElementById('desktopToggleBtn');
-        const mainContent = document.querySelector('.lg\\:ml-80');
+        const mainContent = document.getElementById('mainContent');
         let sidebarOpen = false;
         let sidebarCollapsed = false;
 
         function openSidebar() {
             sidebar.classList.remove('sidebar-closed');
             sidebar.classList.add('sidebar-open');
-            sidebar.classList.remove('sidebar-collapsed');
             sidebarOverlay.classList.remove('hidden');
             sidebarOpen = true;
-            sidebarCollapsed = false;
-
-            // Update mobile menu button icon
             mobileMenuBtn.innerHTML = '<i class="fas fa-times"></i>';
-            // Update desktop toggle button
-            desktopToggleBtn.innerHTML = '<i class="fas fa-chevron-left text-sm"></i>';
-            // Update main content margin
-            if (mainContent) {
-                mainContent.classList.remove('main-content-expanded');
-            }
         }
 
         function closeSidebar() {
             sidebar.classList.remove('sidebar-open');
             sidebar.classList.add('sidebar-closed');
-            sidebar.classList.remove('sidebar-collapsed');
             sidebarOverlay.classList.add('hidden');
             sidebarOpen = false;
-            sidebarCollapsed = false;
-
-            // Update mobile menu button icon
             mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
         }
 
-        function collapseSidebar() {
-            sidebar.classList.remove('sidebar-closed');
-            sidebar.classList.add('sidebar-open');
-            sidebar.classList.add('sidebar-collapsed');
-            sidebarOverlay.classList.add('hidden');
-            sidebarOpen = true;
-            sidebarCollapsed = true;
-
-            // Update desktop toggle button
-            desktopToggleBtn.innerHTML = '<i class="fas fa-chevron-right text-sm"></i>';
-            // Update main content margin
-            if (mainContent) {
-                mainContent.classList.add('main-content-expanded');
-            }
-        }
-
         function toggleSidebar() {
-            if (window.innerWidth >= 1024) {
-                // Desktop: toggle between full and collapsed
-                if (sidebarCollapsed) {
-                    openSidebar();
-                } else {
-                    collapseSidebar();
-                }
-            } else {
-                // Mobile: toggle between open and closed
+            if (window.innerWidth < 1024) {
                 if (sidebarOpen) {
                     closeSidebar();
                 } else {
                     openSidebar();
+                }
+            } else {
+                if (sidebarCollapsed) {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebarCollapsed = false;
+                    desktopToggleBtn.innerHTML = '<i class="fas fa-chevron-left text-sm"></i>';
+                    mainContent.style.marginLeft = '20rem';
+                } else {
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebarCollapsed = true;
+                    desktopToggleBtn.innerHTML = '<i class="fas fa-chevron-right text-sm"></i>';
+                    mainContent.style.marginLeft = '5rem';
                 }
             }
         }
@@ -730,7 +704,6 @@
         // Mobile menu button
         mobileMenuBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            e.stopPropagation();
             toggleSidebar();
         });
 
@@ -754,10 +727,8 @@
 
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
-            if (window.innerWidth < 1024 && sidebarOpen && !sidebarCollapsed) {
-                if (!sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
-                    closeSidebar();
-                }
+            if (window.innerWidth < 1024 && sidebarOpen && !sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                closeSidebar();
             }
         });
 
@@ -780,9 +751,6 @@
                 if (page !== 'dashboard') {
                     // Show suspended modal for all pages except dashboard
                     suspendedModal.classList.remove('hidden');
-                } else {
-                    // Handle dashboard navigation
-                    document.getElementById('dashboardContent').style.display = 'block';
                 }
 
                 // Close sidebar on mobile
@@ -797,7 +765,7 @@
             suspendedModal.classList.add('hidden');
             // Reset navigation to dashboard
             navItems.forEach(nav => nav.classList.remove('active'));
-            navItems[0].classList.add('active'); // First item is dashboard
+            navItems[0].classList.add('active');
         });
 
         // Click outside modal to close
@@ -829,18 +797,19 @@
         // Initialize sidebar state on page load
         function initializeSidebar() {
             if (window.innerWidth >= 1024) {
-                // Desktop: sidebar always open
                 sidebar.classList.remove('sidebar-closed');
-                sidebar.classList.add('sidebar-open');
-                sidebarOverlay.classList.add('hidden');
-                sidebarOpen = false; // Don't track open state on desktop
-            } else {
-                // Mobile: sidebar closed by default
-                sidebar.classList.add('sidebar-closed');
                 sidebar.classList.remove('sidebar-open');
                 sidebarOverlay.classList.add('hidden');
                 sidebarOpen = false;
+                sidebarCollapsed = false;
+                desktopToggleBtn.innerHTML = '<i class="fas fa-chevron-left text-sm"></i>';
+                mainContent.style.marginLeft = '0';
+            } else {
+                sidebar.classList.add('sidebar-closed');
+                sidebarOverlay.classList.add('hidden');
+                sidebarOpen = false;
                 mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                mainContent.style.marginLeft = '0';
             }
         }
 
