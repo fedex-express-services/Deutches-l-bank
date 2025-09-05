@@ -58,29 +58,6 @@
             transform: translateX(0);
         }
 
-        .sidebar-collapsed {
-            width: 80px;
-        }
-
-        .sidebar-collapsed .nav-item span,
-        .sidebar-collapsed h2,
-        .sidebar-collapsed p {
-            display: none;
-        }
-
-        .sidebar-collapsed .nav-item {
-            justify-content: center;
-        }
-
-        @media (min-width: 1024px) {
-            .sidebar-closed {
-                transform: translateX(0);
-            }
-            .main-content-expanded {
-                margin-left: 80px;
-            }
-        }
-
         .modal-backdrop {
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(5px);
@@ -199,12 +176,12 @@
     <!-- Main Banking Interface -->
     <div id="bankingInterface" class="hidden min-h-screen bg-gray-100 dark:bg-gray-900">
         <!-- Mobile Menu Button -->
-        <button id="mobileMenuBtn" class="fixed top-4 left-4 z-50 lg:hidden bg-db-blue text-white p-3 rounded-xl shadow-lg">
+        <button id="mobileMenuBtn" class="fixed top-4 left-4 z-50 bg-db-blue text-white p-3 rounded-xl shadow-lg">
             <i class="fas fa-bars"></i>
         </button>
 
         <!-- Sidebar -->
-        <div id="sidebar" class="fixed left-0 top-0 h-full w-80 gradient-bg text-white shadow-2xl transform sidebar-closed transition-transform duration-300 z-40">
+        <div id="sidebar" class="fixed left-0 top-0 h-full w-80 gradient-bg text-white shadow-2xl transform -translate-x-full transition-transform duration-300 z-40">
             <div class="p-6">
                 <!-- Close Button -->
                 <div class="flex justify-end mb-4">
@@ -224,10 +201,6 @@
                         <h2 class="text-xl font-banking font-bold">Deutsche Bank</h2>
                         <p class="text-sm opacity-75" data-translate="onlineBanking">Online Banking</p>
                     </div>
-                    <!-- Desktop Toggle Button -->
-                    <button id="desktopToggleBtn" class="hidden lg:block ml-auto bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-2 transition-all duration-300">
-                        <i class="fas fa-chevron-left text-sm"></i>
-                    </button>
                 </div>
 
                 <!-- Navigation Menu -->
@@ -269,7 +242,7 @@
         </div>
 
         <!-- Main Content -->
-        <div id="mainContent" class="lg:ml-0 min-h-screen transition-all duration-300">
+        <div class="min-h-screen">
             <!-- Header -->
             <header class="bg-white dark:bg-gray-800 shadow-lg p-6">
                 <div class="flex justify-between items-center">
@@ -658,65 +631,35 @@
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
         const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
-        const desktopToggleBtn = document.getElementById('desktopToggleBtn');
-        const mainContent = document.getElementById('mainContent');
-        let sidebarOpen = false;
-        let sidebarCollapsed = false;
 
         function openSidebar() {
-            sidebar.classList.remove('sidebar-closed');
-            sidebar.classList.add('sidebar-open');
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
             sidebarOverlay.classList.remove('hidden');
-            sidebarOpen = true;
             mobileMenuBtn.innerHTML = '<i class="fas fa-times"></i>';
         }
 
         function closeSidebar() {
-            sidebar.classList.remove('sidebar-open');
-            sidebar.classList.add('sidebar-closed');
+            sidebar.classList.remove('translate-x-0');
+            sidebar.classList.add('-translate-x-full');
             sidebarOverlay.classList.add('hidden');
-            sidebarOpen = false;
             mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-        }
-
-        function toggleSidebar() {
-            if (window.innerWidth < 1024) {
-                if (sidebarOpen) {
-                    closeSidebar();
-                } else {
-                    openSidebar();
-                }
-            } else {
-                if (sidebarCollapsed) {
-                    sidebar.classList.remove('sidebar-collapsed');
-                    sidebarCollapsed = false;
-                    desktopToggleBtn.innerHTML = '<i class="fas fa-chevron-left text-sm"></i>';
-                    mainContent.style.marginLeft = '20rem';
-                } else {
-                    sidebar.classList.add('sidebar-collapsed');
-                    sidebarCollapsed = true;
-                    desktopToggleBtn.innerHTML = '<i class="fas fa-chevron-right text-sm"></i>';
-                    mainContent.style.marginLeft = '5rem';
-                }
-            }
         }
 
         // Mobile menu button
         mobileMenuBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            toggleSidebar();
+            if (sidebar.classList.contains('-translate-x-full')) {
+                openSidebar();
+            } else {
+                closeSidebar();
+            }
         });
 
         // Mobile close button
         sidebarCloseBtn.addEventListener('click', (e) => {
             e.preventDefault();
             closeSidebar();
-        });
-
-        // Desktop toggle button
-        desktopToggleBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleSidebar();
         });
 
         // Overlay click
@@ -727,7 +670,7 @@
 
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
-            if (window.innerWidth < 1024 && sidebarOpen && !sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+            if (!sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target) && !sidebar.classList.contains('-translate-x-full')) {
                 closeSidebar();
             }
         });
@@ -754,9 +697,7 @@
                 }
 
                 // Close sidebar on mobile
-                if (window.innerWidth < 1024) {
-                    closeSidebar();
-                }
+                closeSidebar();
             });
         });
 
@@ -792,35 +733,6 @@
         // Auto-format OTP input
         document.getElementById('otpInput').addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
-        });
-
-        // Initialize sidebar state on page load
-        function initializeSidebar() {
-            if (window.innerWidth >= 1024) {
-                sidebar.classList.remove('sidebar-closed');
-                sidebar.classList.remove('sidebar-open');
-                sidebarOverlay.classList.add('hidden');
-                sidebarOpen = false;
-                sidebarCollapsed = false;
-                desktopToggleBtn.innerHTML = '<i class="fas fa-chevron-left text-sm"></i>';
-                mainContent.style.marginLeft = '0';
-            } else {
-                sidebar.classList.add('sidebar-closed');
-                sidebarOverlay.classList.add('hidden');
-                sidebarOpen = false;
-                mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                mainContent.style.marginLeft = '0';
-            }
-        }
-
-        // Responsive handling
-        window.addEventListener('resize', () => {
-            initializeSidebar();
-        });
-
-        // Initialize sidebar when banking interface loads
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeSidebar();
         });
     </script>
 </body>
