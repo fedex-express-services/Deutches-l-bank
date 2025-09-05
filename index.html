@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deutsche Bank - Online Banking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'banking': ['Orbitron', 'monospace'],
+                        'sans': ['Inter', 'sans-serif']
+                    },
+                    colors: {
+                        'db-blue': '#005AA0',
+                        'db-dark-blue': '#003D70',
+                        'db-light-blue': '#0074CC',
+                        'db-gray': '#F5F5F5'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 90, 160, 0.2);
+        }
+
+        .card-3d:hover {
+            transform: translateY(-5px) rotateX(5deg);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #005AA0 0%, #0074CC 100%);
+        }
+
+        .text-shadow {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-closed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-open {
+            transform: translateX(0);
+        }
+
+        .sidebar-collapsed {
+            width: 80px;
+        }
+
+        .sidebar-collapsed .nav-item span,
+        .sidebar-collapsed h2,
+        .sidebar-collapsed p {
+            display: none;
+        }
+
+        .sidebar-collapsed .nav-item {
+            justify-content: center;
+        }
+
+        @media (min-width: 1024px) {
+            .sidebar-closed {
+                transform: translateX(0);
+            }
+            .main-content-expanded {
+                margin-left: 80px;
+            }
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .balance-display {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(0, 116, 204, 0.5);
+        }
+
+        .floating-alert {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(220, 38, 38, 0.6); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 font-sans">
+    <!-- Dark Mode Support -->
+    <script>
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen gradient-bg flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 w-full max-w-md card-3d">
+            <!-- Deutsche Bank Logo -->
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-db-blue mx-auto rounded-2xl flex items-center justify-center mb-4 card-3d">
+                    <div class="w-12 h-12 border-4 border-white relative">
+                        <div class="absolute inset-2 bg-white transform rotate-45"></div>
+                    </div>
+                </div>
+                <h1 class="text-2xl font-banking font-bold text-db-blue">Deutsche Bank</h1>
+                <p class="text-gray-600 dark:text-gray-400 text-sm">Secure Online Banking</p>
+            </div>
+
+            <!-- Language Selector -->
+            <div class="mb-6">
+                <select id="languageSelect" class="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-db-blue focus:border-db-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="zh">🇨🇳 中文</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="fr">🇫🇷 Français</option>
+                </select>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" data-translate="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your email"
+                           class="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-db-blue focus:border-db-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" data-translate="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password"
+                           class="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-db-blue focus:border-db-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+                </div>
+
+                <button type="submit" class="w-full gradient-bg text-white py-3 rounded-xl font-semibold text-lg hover:opacity-90 transition-all duration-300 card-3d" data-translate="login">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- OTP Screen -->
+    <div id="otpScreen" class="hidden min-h-screen gradient-bg flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 w-full max-w-md card-3d">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-db-blue mx-auto rounded-2xl flex items-center justify-center mb-4">
+                    <i class="fas fa-shield-alt text-white text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-banking font-bold text-db-blue" data-translate="security">Security Verification</h2>
+                <p class="text-gray-600 dark:text-gray-400 text-sm" data-translate="otpMessage">Enter your 6-digit OTP</p>
+            </div>
+
+            <form id="otpForm" class="space-y-6">
+                <div>
+                    <input type="text" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6"
+                           class="w-full p-4 border border-gray-300 rounded-xl text-center text-2xl font-banking tracking-widest focus:ring-2 focus:ring-db-blue focus:border-db-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+
+                <button type="submit" class="w-full gradient-bg text-white py-3 rounded-xl font-semibold text-lg hover:opacity-90 transition-all duration-300 card-3d" data-translate="verify">
+                    Verify
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Banking Interface -->
+    <div id="bankingInterface" class="hidden min-h-screen bg-gray-100 dark:bg-gray-900">
+        <!-- Mobile Menu Button -->
+        <button id="mobileMenuBtn" class="fixed top-4 left-4 z-50 lg:hidden bg-db-blue text-white p-3 rounded-xl shadow-lg">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="fixed left-0 top-0 h-full w-80 gradient-bg text-white shadow-2xl transform sidebar-closed lg:sidebar-open transition-transform duration-300 z-40">
+            <div class="p-6">
+                <!-- Close Button -->
+                <div class="flex justify-end mb-4 lg:hidden">
+                    <button id="sidebarCloseBtn" class="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-2 transition-all duration-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Bank Logo and Info -->
+                <div class="flex items-center space-x-4 mb-8">
+                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
+                        <div class="w-8 h-8 border-2 border-db-blue relative">
+                            <div class="absolute inset-1 bg-db-blue transform rotate-45"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-banking font-bold">Deutsche Bank</h2>
+                        <p class="text-sm opacity-75" data-translate="onlineBanking">Online Banking</p>
+                    </div>
+                    <!-- Desktop Toggle Button -->
+                    <button id="desktopToggleBtn" class="hidden lg:block ml-auto bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-2 transition-all duration-300">
+                        <i class="fas fa-chevron-left text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Navigation Menu -->
+                <nav class="space-y-2">
+                    <a href="#" class="nav-item active flex items-center space-x-3 p-3 rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300" data-page="dashboard">
+                        <i class="fas fa-tachometer-alt w-5"></i>
+                        <span data-translate="dashboard">Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-item flex items-center space-x-3 p-3 rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300" data-page="profile">
+                        <i class="fas fa-user w-5"></i>
+                        <span data-translate="userProfile">User Profile</span>
+                    </a>
+                    <a href="#" class="nav-item flex items-center space-x-3 p-3 rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300" data-page="transfer">
+                        <i class="fas fa-exchange-alt w-5"></i>
+                        <span data-translate="transfer">Transfer</span>
+                    </a>
+                    <a href="#" class="nav-item flex items-center space-x-3 p-3 rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300" data-page="history">
+                        <i class="fas fa-history w-5"></i>
+                        <span data-translate="transactionHistory">Transaction History</span>
+                    </a>
+                    <a href="#" class="nav-item flex items-center space-x-3 p-3 rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300" data-page="settings">
+                        <i class="fas fa-cog w-5"></i>
+                        <span data-translate="accountSettings">Account Settings</span>
+                    </a>
+                    <a href="#" class="nav-item flex items-center space-x-3 p-3 rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300" data-page="contact">
+                        <i class="fas fa-phone w-5"></i>
+                        <span data-translate="contactUs">Contact Us</span>
+                    </a>
+                </nav>
+
+                <!-- Logout Button -->
+                <div class="absolute bottom-6 left-6 right-6">
+                    <button id="logoutBtn" class="w-full flex items-center justify-center space-x-3 p-3 bg-red-600 rounded-xl hover:bg-red-700 transition-all duration-300">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span data-translate="logout">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="lg:ml-80 min-h-screen">
+            <!-- Header -->
+            <header class="bg-white dark:bg-gray-800 shadow-lg p-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-banking font-bold text-db-blue" data-translate="welcome">Welcome Back</h1>
+                        <p class="text-gray-600 dark:text-gray-400">Scott11682568@gmail.com</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <select id="mainLanguageSelect" class="p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="en">🇺🇸 EN</option>
+                            <option value="de">🇩🇪 DE</option>
+                            <option value="zh">🇨🇳 中文</option>
+                            <option value="es">🇪🇸 ES</option>
+                            <option value="fr">🇫🇷 FR</option>
+                        </select>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500" data-translate="lastLogin">Last Login</p>
+                            <p class="text-sm font-semibold" id="currentDateTime"></p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Account Suspended Alert -->
+            <div class="bg-red-500 text-white p-4 mx-6 mt-4 rounded-xl floating-alert pulse-glow">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                    <div>
+                        <h3 class="font-bold" data-translate="accountSuspended">Account Temporarily Suspended</h3>
+                        <p class="text-sm" data-translate="contactManagement">Contact bank management for assistance</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            <main class="p-6">
+                <!-- Dashboard Content -->
+                <div id="dashboardContent" class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6" data-translate="dashboard">Dashboard</h2>
+
+                    <!-- Account Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Account Balance Card -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 card-3d border-l-4 border-blue-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400" data-translate="accountBalance">ACCOUNT BALANCE</h3>
+                                <i class="fas fa-wallet text-blue-500"></i>
+                            </div>
+                            <p class="text-3xl balance-display text-blue-600">$10,576,000.00</p>
+                            <p class="text-sm text-gray-500 mt-2">USD</p>
+                        </div>
+
+                        <!-- Account Number Card -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 card-3d border-l-4 border-green-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400" data-translate="accountNumber">ACCOUNT NUMBER</h3>
+                                <i class="fas fa-credit-card text-green-500"></i>
+                            </div>
+                            <p class="text-2xl font-banking text-green-600">1668414900</p>
+                        </div>
+
+                        <!-- Account Type Card -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 card-3d border-l-4 border-purple-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400" data-translate="accountType">ACCOUNT TYPE</h3>
+                                <i class="fas fa-university text-purple-500"></i>
+                            </div>
+                            <p class="text-xl font-semibold text-purple-600" data-translate="current">Current</p>
+                        </div>
+
+                        <!-- Currency Card -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 card-3d border-l-4 border-yellow-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400" data-translate="accountCurrency">ACCOUNT CURRENCY</h3>
+                                <i class="fas fa-dollar-sign text-yellow-500"></i>
+                            </div>
+                            <p class="text-xl font-semibold text-yellow-600">USD</p>
+                        </div>
+                    </div>
+
+                    <!-- Exchange Rate Section -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 card-3d">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4" data-translate="exchangeRate">Today Currency Exchange Rate</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                                <p class="text-sm text-gray-500">EUR/USD</p>
+                                <p class="text-xl font-banking text-blue-600">1.0842</p>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                                <p class="text-sm text-gray-500">GBP/USD</p>
+                                <p class="text-xl font-banking text-green-600">1.2756</p>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                                <p class="text-sm text-gray-500">USD/JPY</p>
+                                <p class="text-xl font-banking text-purple-600">148.42</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Suspended Account Modal -->
+    <div id="suspendedModal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 mx-4 max-w-md w-full card-3d">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-ban text-white text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-red-600 mb-4" data-translate="accessSuspended">Account Access Suspended</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6" data-translate="suspendedMessage">Your account access is currently suspended. Please contact banking management for assistance.</p>
+                <button id="modalCloseBtn" class="bg-db-blue text-white px-6 py-3 rounded-xl hover:opacity-90 transition-all duration-300" data-translate="goBack">
+                    Go Back
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"></div>
+
+    <script>
+        // Multi-language support
+        const translations = {
+            en: {
+                email: "Email",
+                password: "Password",
+                login: "Login",
+                security: "Security Verification",
+                otpMessage: "Enter your 6-digit OTP",
+                verify: "Verify",
+                onlineBanking: "Online Banking",
+                dashboard: "Dashboard",
+                userProfile: "User Profile",
+                transfer: "Transfer",
+                transactionHistory: "Transaction History",
+                accountSettings: "Account Settings",
+                contactUs: "Contact Us",
+                logout: "Logout",
+                welcome: "Welcome Back",
+                lastLogin: "Last Login",
+                accountSuspended: "Account Temporarily Suspended",
+                contactManagement: "Contact bank management for assistance",
+                accountBalance: "ACCOUNT BALANCE",
+                accountNumber: "ACCOUNT NUMBER",
+                accountType: "ACCOUNT TYPE",
+                current: "Current",
+                accountCurrency: "ACCOUNT CURRENCY",
+                exchangeRate: "Today Currency Exchange Rate",
+                accessSuspended: "Account Access Suspended",
+                suspendedMessage: "Your account access is currently suspended. Please contact banking management for assistance.",
+                goBack: "Go Back"
+            },
+            de: {
+                email: "E-Mail",
+                password: "Passwort",
+                login: "Anmelden",
+                security: "Sicherheitsüberprüfung",
+                otpMessage: "Geben Sie Ihr 6-stelliges OTP ein",
+                verify: "Verifizieren",
+                onlineBanking: "Online Banking",
+                dashboard: "Dashboard",
+                userProfile: "Benutzerprofil",
+                transfer: "Überweisung",
+                transactionHistory: "Transaktionsverlauf",
+                accountSettings: "Kontoeinstellungen",
+                contactUs: "Kontakt",
+                logout: "Abmelden",
+                welcome: "Willkommen zurück",
+                lastLogin: "Letzte Anmeldung",
+                accountSuspended: "Konto vorübergehend gesperrt",
+                contactManagement: "Wenden Sie sich an das Bankmanagement",
+                accountBalance: "KONTOSTAND",
+                accountNumber: "KONTONUMMER",
+                accountType: "KONTOTYP",
+                current: "Girokonto",
+                accountCurrency: "KONTOWÄHRUNG",
+                exchangeRate: "Heutiger Wechselkurs",
+                accessSuspended: "Kontozugang gesperrt",
+                suspendedMessage: "Ihr Kontozugang ist derzeit gesperrt. Bitte wenden Sie sich an das Bankmanagement.",
+                goBack: "Zurück"
+            },
+            zh: {
+                email: "电子邮件",
+                password: "密码",
+                login: "登录",
+                security: "安全验证",
+                otpMessage: "请输入6位数验证码",
+                verify: "验证",
+                onlineBanking: "网上银行",
+                dashboard: "仪表板",
+                userProfile: "用户资料",
+                transfer: "转账",
+                transactionHistory: "交易历史",
+                accountSettings: "账户设置",
+                contactUs: "联系我们",
+                logout: "退出",
+                welcome: "欢迎回来",
+                lastLogin: "上次登录",
+                accountSuspended: "账户暂时冻结",
+                contactManagement: "请联系银行管理部门寻求帮助",
+                accountBalance: "账户余额",
+                accountNumber: "账户号码",
+                accountType: "账户类型",
+                current: "活期",
+                accountCurrency: "账户货币",
+                exchangeRate: "今日汇率",
+                accessSuspended: "账户访问已暂停",
+                suspendedMessage: "您的账户访问目前已暂停。请联系银行管理部门寻求帮助。",
+                goBack: "返回"
+            },
+            es: {
+                email: "Correo Electrónico",
+                password: "Contraseña",
+                login: "Iniciar Sesión",
+                security: "Verificación de Seguridad",
+                otpMessage: "Ingrese su OTP de 6 dígitos",
+                verify: "Verificar",
+                onlineBanking: "Banca en Línea",
+                dashboard: "Panel",
+                userProfile: "Perfil de Usuario",
+                transfer: "Transferencia",
+                transactionHistory: "Historial de Transacciones",
+                accountSettings: "Configuración de Cuenta",
+                contactUs: "Contáctanos",
+                logout: "Cerrar Sesión",
+                welcome: "Bienvenido de Nuevo",
+                lastLogin: "Último Inicio de Sesión",
+                accountSuspended: "Cuenta Temporalmente Suspendida",
+                contactManagement: "Contacte a la administración del banco para asistencia",
+                accountBalance: "SALDO DE CUENTA",
+                accountNumber: "NÚMERO DE CUENTA",
+                accountType: "TIPO DE CUENTA",
+                current: "Corriente",
+                accountCurrency: "MONEDA DE CUENTA",
+                exchangeRate: "Tipo de Cambio de Hoy",
+                accessSuspended: "Acceso a Cuenta Suspendido",
+                suspendedMessage: "Su acceso a la cuenta está actualmente suspendido. Por favor contacte a la administración del banco para asistencia.",
+                goBack: "Volver"
+            },
+            fr: {
+                email: "Email",
+                password: "Mot de Passe",
+                login: "Se Connecter",
+                security: "Vérification de Sécurité",
+                otpMessage: "Entrez votre OTP à 6 chiffres",
+                verify: "Vérifier",
+                onlineBanking: "Banque en Ligne",
+                dashboard: "Tableau de Bord",
+                userProfile: "Profil Utilisateur",
+                transfer: "Virement",
+                transactionHistory: "Historique des Transactions",
+                accountSettings: "Paramètres du Compte",
+                contactUs: "Nous Contacter",
+                logout: "Se Déconnecter",
+                welcome: "Bon Retour",
+                lastLogin: "Dernière Connexion",
+                accountSuspended: "Compte Temporairement Suspendu",
+                contactManagement: "Contactez la direction de la banque pour assistance",
+                accountBalance: "SOLDE DU COMPTE",
+                accountNumber: "NUMÉRO DE COMPTE",
+                accountType: "TYPE DE COMPTE",
+                current: "Courant",
+                accountCurrency: "DEVISE DU COMPTE",
+                exchangeRate: "Taux de Change d'Aujourd'hui",
+                accessSuspended: "Accès au Compte Suspendu",
+                suspendedMessage: "Votre accès au compte est actuellement suspendu. Veuillez contacter la direction de la banque pour assistance.",
+                goBack: "Retour"
+            }
+        };
+
+        let currentLanguage = 'en';
+
+        function updateLanguage(lang) {
+            currentLanguage = lang;
+            const elements = document.querySelectorAll('[data-translate]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+
+            // Update language selectors
+            document.getElementById('languageSelect').value = lang;
+            document.getElementById('mainLanguageSelect').value = lang;
+        }
+
+        // Language selector event listeners
+        document.getElementById('languageSelect').addEventListener('change', (e) => {
+            updateLanguage(e.target.value);
+        });
+
+        document.getElementById('mainLanguageSelect').addEventListener('change', (e) => {
+            updateLanguage(e.target.value);
+        });
+
+        // Update current date and time
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('currentDateTime').textContent = now.toLocaleString();
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // Custom alert function
+        function showAlert(message, type = 'error') {
+            const alertModal = document.createElement('div');
+            alertModal.className = 'fixed inset-0 modal-backdrop flex items-center justify-center z-50';
+            alertModal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
+                    <div class="text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${type === 'error' ? 'bg-red-100' : 'bg-green-100'}">
+                            <i class="fas ${type === 'error' ? 'fa-exclamation-triangle text-red-500' : 'fa-check text-green-500'} text-2xl"></i>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300 mb-4">${message}</p>
+                        <button class="px-6 py-2 bg-db-blue text-white rounded-lg hover:opacity-90 transition-all" onclick="this.closest('.fixed').remove()">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(alertModal);
+
+            // Auto close after 3 seconds
+            setTimeout(() => {
+                if (alertModal.parentNode) {
+                    alertModal.remove();
+                }
+            }, 3000);
+        }
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            // Add loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Verifying...';
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                if (email === 'Scott11682568@gmail.com' && password === 'Scott111') {
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('otpScreen').classList.remove('hidden');
+                } else {
+                    showAlert('Invalid email or password. Please try again.');
+                }
+
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }, 1000);
+        });
+
+        // OTP verification
+        document.getElementById('otpForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const otp = document.getElementById('otpInput').value.trim();
+
+            // Add loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Verifying...';
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                if (otp === '032619') {
+                    document.getElementById('otpScreen').classList.add('hidden');
+                    document.getElementById('bankingInterface').classList.remove('hidden');
+                } else {
+                    showAlert('Invalid OTP. Please enter the correct 6-digit code.');
+                    document.getElementById('otpInput').value = '';
+                }
+
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }, 1000);
+        });
+
+        // Sidebar functionality
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+        const desktopToggleBtn = document.getElementById('desktopToggleBtn');
+        const mainContent = document.querySelector('.lg\\:ml-80');
+        let sidebarOpen = false;
+        let sidebarCollapsed = false;
+
+        function openSidebar() {
+            sidebar.classList.remove('sidebar-closed');
+            sidebar.classList.add('sidebar-open');
+            sidebar.classList.remove('sidebar-collapsed');
+            sidebarOverlay.classList.remove('hidden');
+            sidebarOpen = true;
+            sidebarCollapsed = false;
+
+            // Update mobile menu button icon
+            mobileMenuBtn.innerHTML = '<i class="fas fa-times"></i>';
+            // Update desktop toggle button
+            desktopToggleBtn.innerHTML = '<i class="fas fa-chevron-left text-sm"></i>';
+            // Update main content margin
+            if (mainContent) {
+                mainContent.classList.remove('main-content-expanded');
+            }
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('sidebar-open');
+            sidebar.classList.add('sidebar-closed');
+            sidebar.classList.remove('sidebar-collapsed');
+            sidebarOverlay.classList.add('hidden');
+            sidebarOpen = false;
+            sidebarCollapsed = false;
+
+            // Update mobile menu button icon
+            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+        }
+
+        function collapseSidebar() {
+            sidebar.classList.remove('sidebar-closed');
+            sidebar.classList.add('sidebar-open');
+            sidebar.classList.add('sidebar-collapsed');
+            sidebarOverlay.classList.add('hidden');
+            sidebarOpen = true;
+            sidebarCollapsed = true;
+
+            // Update desktop toggle button
+            desktopToggleBtn.innerHTML = '<i class="fas fa-chevron-right text-sm"></i>';
+            // Update main content margin
+            if (mainContent) {
+                mainContent.classList.add('main-content-expanded');
+            }
+        }
+
+        function toggleSidebar() {
+            if (window.innerWidth >= 1024) {
+                // Desktop: toggle between full and collapsed
+                if (sidebarCollapsed) {
+                    openSidebar();
+                } else {
+                    collapseSidebar();
+                }
+            } else {
+                // Mobile: toggle between open and closed
+                if (sidebarOpen) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            }
+        }
+
+        // Mobile menu button
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSidebar();
+        });
+
+        // Mobile close button
+        sidebarCloseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeSidebar();
+        });
+
+        // Desktop toggle button
+        desktopToggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleSidebar();
+        });
+
+        // Overlay click
+        sidebarOverlay.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeSidebar();
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 1024 && sidebarOpen && !sidebarCollapsed) {
+                if (!sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                    closeSidebar();
+                }
+            }
+        });
+
+        // Navigation functionality with suspended account modal
+        const navItems = document.querySelectorAll('.nav-item');
+        const suspendedModal = document.getElementById('suspendedModal');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // Remove active class from all items
+                navItems.forEach(nav => nav.classList.remove('active'));
+                // Add active class to clicked item
+                item.classList.add('active');
+
+                const page = item.getAttribute('data-page');
+
+                if (page !== 'dashboard') {
+                    // Show suspended modal for all pages except dashboard
+                    suspendedModal.classList.remove('hidden');
+                } else {
+                    // Handle dashboard navigation
+                    document.getElementById('dashboardContent').style.display = 'block';
+                }
+
+                // Close sidebar on mobile
+                if (window.innerWidth < 1024) {
+                    closeSidebar();
+                }
+            });
+        });
+
+        // Modal close functionality
+        modalCloseBtn.addEventListener('click', () => {
+            suspendedModal.classList.add('hidden');
+            // Reset navigation to dashboard
+            navItems.forEach(nav => nav.classList.remove('active'));
+            navItems[0].classList.add('active'); // First item is dashboard
+        });
+
+        // Click outside modal to close
+        suspendedModal.addEventListener('click', (e) => {
+            if (e.target === suspendedModal) {
+                suspendedModal.classList.add('hidden');
+                navItems.forEach(nav => nav.classList.remove('active'));
+                navItems[0].classList.add('active');
+            }
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            document.getElementById('bankingInterface').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            // Reset forms
+            document.getElementById('loginForm').reset();
+            document.getElementById('otpForm').reset();
+            // Reset navigation
+            navItems.forEach(nav => nav.classList.remove('active'));
+            navItems[0].classList.add('active');
+        });
+
+        // Auto-format OTP input
+        document.getElementById('otpInput').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+        });
+
+        // Initialize sidebar state on page load
+        function initializeSidebar() {
+            if (window.innerWidth >= 1024) {
+                // Desktop: sidebar always open
+                sidebar.classList.remove('sidebar-closed');
+                sidebar.classList.add('sidebar-open');
+                sidebarOverlay.classList.add('hidden');
+                sidebarOpen = false; // Don't track open state on desktop
+            } else {
+                // Mobile: sidebar closed by default
+                sidebar.classList.add('sidebar-closed');
+                sidebar.classList.remove('sidebar-open');
+                sidebarOverlay.classList.add('hidden');
+                sidebarOpen = false;
+                mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        }
+
+        // Responsive handling
+        window.addEventListener('resize', () => {
+            initializeSidebar();
+        });
+
+        // Initialize sidebar when banking interface loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSidebar();
+        });
+    </script>
+</body>
+</html>
